@@ -1,0 +1,158 @@
+# Create a new database
+use my_database
+
+# Create a collection for orders
+db.createCollection("orders")
+
+# Create a collection for customers
+db.createCollection("customers")
+
+# Insert data into the collections
+db.orders.insertOne({
+  "customer": "John Doe",
+  "products": [
+    { "name": "shoes", "quantity": 1 },
+    { "name": "shirt", "quantity": 2 }
+  ],
+  "totalAmount": 100
+})
+
+db.customers.insertOne({
+  "name": "John Doe",
+  "email": "john.doe@example.com",
+  "city": "Pune"
+})
+
+1. Retrieve all the documents from collection.
+
+
+
+db.orders.find({})
+
+2. List the customer in ascending order of their total orders.
+
+
+
+db.orders.aggregate([
+  {
+    $group: {
+      _id: "$customer",
+      totalOrders: { $sum: 1 }
+    }
+  },
+  { $sort: { totalOrders: 1 } }
+])
+
+
+
+3. Change the product quantity from 1 to 3 of product ”mobile” of any order.
+
+db.orders.update({
+  "products": {
+    "$elemMatch": {
+      "name": "mobile",
+      "quantity": 1
+    }
+  }
+}, {
+  "$set": {
+    "products.$.quantity": 3
+  }
+})
+
+
+
+4. Display the name of customers who have maximum orders.
+
+db.orders.aggregate([
+  {
+    $group: {
+      _id: "$customer",
+      totalOrders: { $sum: 1 }
+    }
+  },
+  { $sort: { totalOrders: -1 } },
+  { $limit: 1 }
+])
+
+
+
+5. Display the Mob No of customers who have highest Buying Total.
+
+db.orders.aggregate([
+  {
+    $group: {
+      _id: "$customer",
+      totalBuying: { $sum: "$totalAmount" }
+    }
+  },
+  { $sort: { totalBuying: -1 } },
+  { $limit: 1 }
+])
+
+
+
+6. Display how many customers are there in customer collection.
+
+db.customers.countDocuments()
+
+
+
+7. Using collection of customers, and $exists, tell me how many customers belongs from Pune city.
+
+db.customers.countDocuments({ "city": { $exists: true, $eq: "Pune" } })
+
+
+
+8. Find the customer who purchased shoes and cloth product.
+
+db.orders.find({ "products": { $elemMatch: { $in: ["shoes", "cloth"] } } })
+
+
+
+9. Find the top 10 buyers.
+
+db.orders.aggregate([
+  {
+    $group: {
+      _id: "$customer",
+      totalBuying: { $sum: "$totalAmount" }
+    }
+  },
+  { $sort: { totalBuying: -1 } },
+  { $limit: 10 }
+])
+
+
+
+10. Display all the orders where total amount is >1000.
+
+db.orders.find({ "totalAmount": { $gt: 1000 } })
+
+
+
+11. Display All the customers with corresponding buying price.
+
+db.orders.aggregate([
+  {
+    $group: {
+      _id: "$customer",
+      totalBuying: { $sum: "$totalAmount" }
+    }
+  },
+  { $project: { _id: 0, customer: "$_id", totalBuying: "$totalBuying" } }
+])
+
+
+
+12. write a MapReduce function which will return the Total Price per Customer.
+
+function map() {
+  emit(this.customer, this.totalAmount);
+}
+
+function reduce(key, values) {
+  return values.reduce((a, b) => a + b, 0);
+}
+
+db.orders.mapReduce(map, reduce, { out: "total_price_per_customer" });
