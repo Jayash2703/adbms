@@ -1,0 +1,96 @@
+
+To design an Employee Management System in MongoDB, you can create a database and a collection for employees. The employee collection can have the following attributes:
+
+empid: string
+ename: string
+department: string
+city: string
+educationalBackground: string
+salary: number
+post: string
+joinDate: date
+leavingDate: date
+skills: array
+You can then implement the following statements using MongoDB aggregation queries:
+
+1. List all the employee from institute.
+
+db.employees.find({})
+2. Display all the employees in seniority level( based on joining date).
+
+db.employees.aggregate([
+  { $sort: { joinDate: 1 } }
+])
+3. Display total no of employees from each department.
+
+db.employees.aggregate([
+  {
+    $group: {
+      _id: "$department",
+      count: { $sum: 1 }
+    }
+  },
+  { $sort: { count: -1 } }
+])
+4. List the employee details that are from Baroda or Ahmedabad and working in CSE department.
+
+db.employees.find({ department: "CSE", city: { $in: ["Baroda", "Ahmedabad"] } })
+5. Display the information of employees having typing skill and working in computer department who are currently joined.
+
+db.employees.find({ department: "Computer", skills: { $in: ["Typing"] }, leavingDate: null })
+6. List of the empid, ename, department number and skill of employee whose join date is 20th of any month.
+
+db.employees.find({ joinDate: { $dayOfMonth: 20 } })
+7. Calculate total experience of employee. Consider the today’s date.
+
+db.employees.aggregate([
+  {
+    $addFields: {
+      totalExperience: {
+        $divide: [
+          {
+            $subtract: [new Date(), "$joinDate"]
+          },
+          1000 * 60 * 60 * 24 * 365
+        ]
+      }
+    }
+  },
+  { $project: { _id: 0, empid: 1, ename: 1, totalExperience: 1 } }
+])
+8. Calculate department wise total salary and display only those departments which pay maximum salary.
+
+db.employees.aggregate([
+  {
+    $group: {
+      _id: "$department",
+      totalSalary: { $sum: "$salary" }
+    }
+  },
+  { $sort: { totalSalary: -1 } },
+  { $limit: 1 }
+])
+9. List the name of employee whose name staring with ‘s’ or ‘m’ character who are working in computer department and having speaking skill.
+
+db.employees.find({ name: { $regex: "^[s|m]" }, department: "Computer", skills: { $in: ["Speaking"] } })
+
+10.Count the no of employee working in system department of Pune Location.
+
+db.employees.countDocuments({ department: "System", city: "Pune" })
+11.Arrange the employee name in alphabetic order whose salary between 4000 to 12000 and working in sales department.
+
+db.employees.find({ department: "Sales", salary: { $between: [4000, 12000] } }).sort({ name: 1 })
+12.Count total no of employee in Sales department.
+
+db.employees.countDocuments({ department: "Sales" })
+13.Count the total no employee date wise and display only those date which having at least 2 employee.
+
+db.employees.aggregate([
+  {
+    $group: {
+      _id: "$joinDate",
+      count: { $sum: 1 }
+    }
+  },
+  { $match: { count: { $gte: 2 } } }
+])
