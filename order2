@@ -1,0 +1,81 @@
+To create an Order Management System using MongoDB and implement the following statements, you can follow these steps:
+
+1. Retrieve all documents in a collection
+
+db.orders.find({})
+2. Retrieve all documents that contain paid orders (the "paid" field is "Y")
+
+db.orders.find({ paid: "Y" })
+3. Retrieve all documents that contain the orders are from before April 2022
+
+db.orders.find({ orderDate: { $lt: new Date("2022-04-01") } })
+4. Retrieve all documents that contain unpaid orders or whose orders are from before 2019
+
+db.orders.find({ $or: [ { paid: "N" }, { orderDate: { $lt: new Date("2019-01-01") } }] })
+5. Retrieve all documents that contain orders whose price is in 20000.
+
+db.orders.find({ price: { $eq: 20000 } })
+6. Retrieve all documents that contain orders whose price is less than 18 000
+
+db.orders.find({ price: { $lt: 18000 } })
+7. Retrieve all documents with orders that contain product "Mobile"
+
+db.orders.find({ products: { $elemMatch: { name: "Mobile" } } })
+8. List all documents with orders that contain products whose quantity is less than 10.
+
+db.orders.find({ products: { $elemMatch: { quantity: { $lt: 10 } } } })
+9. Retrieve all the documents from collection.
+
+db.orders.find({})
+10. List the customer in ascending order of their total orders.
+
+db.orders.aggregate([
+  {
+    $group: {
+      _id: "$customer",
+      totalOrders: { $sum: 1 }
+    }
+  },
+  { $sort: { totalOrders: 1 } }
+])
+11. Change the product quantity from 1 to 3 of product ”mobile” of any order.
+
+db.orders.update({
+  "products": {
+    "$elemMatch": {
+      "name": "Mobile",
+      "quantity": 1
+    }
+  }
+}, {
+  "$set": {
+    "products.$.quantity": 3
+  }
+})
+12. Display the name of customers who have maximum orders.
+
+db.orders.aggregate([
+  {
+    $group: {
+      _id: "$customer",
+      totalOrders: { $sum: 1 }
+    }
+  },
+  { $sort: { totalOrders: -1 } },
+  { $limit: 1 }
+])
+13. Display the Mob No of customers who have highest Buying Total.
+
+db.orders.aggregate([
+  {
+    $group: {
+      _id: "$customer",
+      totalBuying: { $sum: "$price" }
+    }
+  },
+  { $sort: { totalBuying: -1 } },
+  { $limit: 1 }
+])
+14. Display how many customers are there in customer collection
+
+db.customers.countDocuments({})
